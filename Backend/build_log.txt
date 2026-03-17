@@ -1,0 +1,53 @@
+[INFO] Scanning for projects...
+[WARNING] 
+[WARNING] Some problems were encountered while building the effective model for com.smartcareer:smart-career-platform:jar:0.0.1-SNAPSHOT
+[WARNING] 'dependencies.dependency.(groupId:artifactId:type:classifier)' must be unique: org.springframework.boot:spring-boot-starter-data-jpa:jar -> duplicate declaration of version (?) @ line 54, column 15
+[WARNING] 'dependencies.dependency.(groupId:artifactId:type:classifier)' must be unique: org.springframework.boot:spring-boot-starter-web:jar -> duplicate declaration of version (?) @ line 58, column 15
+[WARNING] 'dependencies.dependency.(groupId:artifactId:type:classifier)' must be unique: com.mysql:mysql-connector-j:jar -> duplicate declaration of version (?) @ line 69, column 15
+[WARNING] 'dependencies.dependency.(groupId:artifactId:type:classifier)' must be unique: org.projectlombok:lombok:jar -> duplicate declaration of version (?) @ line 74, column 15
+[WARNING] 
+[WARNING] It is highly recommended to fix these problems because they threaten the stability of your build.
+[WARNING] 
+[WARNING] For this reason, future Maven versions might no longer support building such malformed projects.
+[WARNING] 
+[INFO] 
+[INFO] ---------------< com.smartcareer:smart-career-platform >----------------
+[INFO] Building smart-career-platform 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.4.1:clean (default-clean) @ smart-career-platform ---
+[INFO] Deleting C:\Users\MOHIT\Desktop\College\2nd Year\Semester 4\Assignemt (Java + DBMS)\Major Project\Backend\target
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ smart-career-platform ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 0 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ smart-career-platform ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 24 source files with javac [debug parameters release 17] to target\classes
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /C:/Users/MOHIT/Desktop/College/2nd Year/Semester 4/Assignemt (Java + DBMS)/Major Project/Backend/src/main/java/com/smartcareer/platform/controller/GithubController.java:[16,12] cannot find symbol
+  symbol:   class GithubStatsDTO
+  location: class com.smartcareer.platform.controller.GithubController
+[INFO] 1 error
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  2.597 s
+[INFO] Finished at: 2026-03-16T22:33:38+05:30
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.14.1:compile (default-compile) on project smart-career-platform: Compilation failure
+[ERROR] /C:/Users/MOHIT/Desktop/College/2nd Year/Semester 4/Assignemt (Java + DBMS)/Major Project/Backend/src/main/java/com/smartcareer/platform/controller/GithubController.java:[16,12] cannot find symbol
+[ERROR]   symbol:   class GithubStatsDTO
+[ERROR]   location: class com.smartcareer.platform.controller.GithubController
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
