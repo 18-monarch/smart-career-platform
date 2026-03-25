@@ -16,23 +16,36 @@ export function Login() {
     e.preventDefault();
     setError("");
 
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
+
     try {
       if (isSignup) {
-        await createUser({ name, email, password });
+        const res = await createUser({ name: name.trim(), email: trimmedEmail, password: trimmedPassword });
+        if (!res) throw new Error("Registration failed. Email might already exist.");
+        
         alert("Account created! Please login.");
         setIsSignup(false);
       } else {
-        const data = await loginUser(email, password);
+        const data = await loginUser(trimmedEmail, trimmedPassword);
 
-        if (!data || !data.id) throw new Error();
+        if (!data) {
+          setError("Invalid email or password. Please check your credentials.");
+          return;
+        }
+
+        if (!data.id) {
+          setError("Server returned an invalid response. Please try again.");
+          return;
+        }
 
         localStorage.setItem("userId", String(data.id));
         localStorage.setItem("userName", data.name || "");
 
         navigate("/dashboard");
       }
-    } catch {
-      setError("Invalid email or password");
+    } catch (err: any) {
+      setError(err.message || "An unexpected error occurred. Please try again later.");
     }
   };
 

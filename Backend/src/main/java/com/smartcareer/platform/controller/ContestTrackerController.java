@@ -7,7 +7,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/contests")
-@CrossOrigin(origins = "http://localhost:5173")
 public class ContestTrackerController {
 
     private final ContestTrackerService service;

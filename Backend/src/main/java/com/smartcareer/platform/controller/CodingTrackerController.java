@@ -8,7 +8,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/coding")
-@CrossOrigin(origins = "http://localhost:5173")
 public class CodingTrackerController {
 
     private final CodingTrackerService service;

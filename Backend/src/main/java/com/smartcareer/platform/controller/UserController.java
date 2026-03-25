@@ -11,8 +11,12 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "http://localhost:5173")
 public class UserController {
+
+    @GetMapping("/health")
+    public ResponseEntity<String> healthCheck() {
+        return ResponseEntity.ok("Backend is running");
+    }
 
     private final UserService userService;
 
@@ -21,8 +25,16 @@ public class UserController {
     }
 
     @PostMapping
-    public User createUser(@RequestBody User user){
-        return userService.createUser(user);
+    public ResponseEntity<?> createUser(@RequestBody User user){
+        System.out.println("Registration attempt for email: " + user.getEmail());
+        try {
+            User created = userService.createUser(user);
+            System.out.println("User created successfully: " + created.getEmail());
+            return ResponseEntity.ok(created);
+        } catch (Exception e) {
+            System.err.println("Registration failed for " + user.getEmail() + ": " + e.getMessage());
+            return ResponseEntity.status(400).body(Map.of("error", "Email already exists or invalid data"));
+        }
     }
 
     @GetMapping
@@ -34,14 +46,18 @@ public class UserController {
     public ResponseEntity<?> login(@RequestBody Map<String, String> credentials){
         String email = credentials.get("email");
         String password = credentials.get("password");
+        System.out.println("Login attempt for email: [" + email + "]");
+        
         Optional<User> user = userService.login(email, password);
         if(user.isPresent()){
+            System.out.println("Login success for: " + email);
             return ResponseEntity.ok(Map.of(
                 "id", user.get().getId(),
                 "name", user.get().getName(),
                 "email", user.get().getEmail()
             ));
         } else {
+            System.out.println("Login failed: Invalid credentials for " + email);
             return ResponseEntity.status(401).body(Map.of("error", "Invalid email or password"));
         }
     }

@@ -1,6 +1,10 @@
-import { createBrowserRouter } from "react-router";
+import React from "react";
+import { createBrowserRouter, Navigate } from "react-router-dom";
+
 import { DashboardLayout } from "./components/DashboardLayout";
 import { Login } from "./pages/Login";
+import Register from "./pages/Register";
+
 import { Dashboard } from "./pages/Dashboard";
 import { CareerPath } from "./pages/CareerPath";
 import { SkillGap } from "./pages/SkillGap";
@@ -18,45 +22,48 @@ import { ProductivityTracker } from "./pages/ProductivityTracker";
 import { FitnessBalance } from "./pages/FitnessBalance";
 import { Analytics } from "./pages/Analytics";
 import { NotFound } from "./pages/NotFound";
-import Register from "./pages/Register";
+
+// 🔐 Auth check
+const requireAuth = (element: JSX.Element) => {
+  const userId = localStorage.getItem("userId");
+  return userId ? element : <Navigate to="/login" />;
+};
 
 export const router = createBrowserRouter([
   {
-  path: "/register",
-  Component: Register,
-  },
-  
-  {
     path: "/login",
-    Component: Login,
+    element: <Login />,
   },
-
   {
     path: "/register",
-    Component: Register,
+    element: <Register />,
   },
 
   {
     path: "/",
-    Component: DashboardLayout,
+    element: requireAuth(<DashboardLayout />),
+
     children: [
-      { index: true, Component: Dashboard },
-      { path: "career-path", Component: CareerPath },
-      { path: "skill-gap", Component: SkillGap },
-      { path: "roadmap", Component: Roadmap },
-      { path: "resources", Component: Resources },
-      { path: "coding-tracker", Component: CodingTracker },
-      { path: "contest-tracker", Component: ContestTracker },
-      { path: "internships", Component: InternshipRecommendation },
-      { path: "internship-prep", Component: InternshipPreparation },
-      { path: "mock-test", Component: MockTest },
-      { path: "mock-interview", Component: MockInterview },
-      { path: "resume-analyzer", Component: ResumeAnalyzer },
-      { path: "jobs", Component: JobRecommendation },
-      { path: "productivity", Component: ProductivityTracker },
-      { path: "fitness", Component: FitnessBalance },
-      { path: "analytics", Component: Analytics },
-      { path: "*", Component: NotFound },
+      { index: true, element: <Dashboard /> },
+      { path: "dashboard", element: <Dashboard /> },
+
+      { path: "career-path", element: <CareerPath /> },
+      { path: "skill-gap", element: <SkillGap /> },
+      { path: "roadmap", element: <Roadmap /> },
+      { path: "resources", element: <Resources /> },
+      { path: "coding-tracker", element: <CodingTracker /> },
+      { path: "contest-tracker", element: <ContestTracker /> },
+      { path: "internships", element: <InternshipRecommendation /> },
+      { path: "internship-prep", element: <InternshipPreparation /> },
+      { path: "mock-test", element: <MockTest /> },
+      { path: "mock-interview", element: <MockInterview /> },
+      { path: "resume-analyzer", element: <ResumeAnalyzer /> },
+      { path: "jobs", element: <JobRecommendation /> },
+      { path: "productivity", element: <ProductivityTracker /> },
+      { path: "fitness", element: <FitnessBalance /> },
+      { path: "analytics", element: <Analytics /> },
+
+      { path: "*", element: <NotFound /> },
     ],
   },
 ]);

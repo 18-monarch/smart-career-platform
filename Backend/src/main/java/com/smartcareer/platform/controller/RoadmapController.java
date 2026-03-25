@@ -7,7 +7,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/roadmap")
-@CrossOrigin(origins = "http://localhost:5173")
 public class RoadmapController {
 
     private final RoadmapService service;

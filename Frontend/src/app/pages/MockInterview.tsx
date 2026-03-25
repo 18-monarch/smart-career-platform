@@ -1,17 +1,40 @@
-import { MessageSquare, Mic, Video, ThumbsUp, TrendingUp, Clock } from "lucide-react";
-import { useState } from "react";
-
-const interviewQuestions = [
-  "Tell me about yourself and your background",
-  "Why do you want to work at our company?",
-  "Describe a challenging project you worked on",
-  "How do you handle tight deadlines?",
-  "What are your strengths and weaknesses?",
-];
+import { MessageSquare, Mic, Video, ThumbsUp, TrendingUp, Clock, AlertCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { getMockInterview } from "../../api/api";
 
 export function MockInterview() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [isRecording, setIsRecording] = useState(false);
+  const [interviewData, setInterviewData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getMockInterview()
+      .then(setInterviewData)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const questions = interviewData?.questions || [
+    "Tell me about yourself and your background",
+    "Why do you want to work at our company?",
+    "Describe a challenging project you worked on",
+    "How do you handle tight deadlines?",
+    "What are your strengths and weaknesses?",
+  ];
+
+  const feedback = interviewData?.feedback || {
+    confidence: 82,
+    communication: 78,
+    clarity: 75,
+    bodyLanguage: 85
+  };
+
+  const suggestions = interviewData?.suggestions || [
+    "Add more specific examples",
+    "Reduce filler words",
+    "Improve eye contact"
+  ];
 
   return (
     <div className="space-y-6">
@@ -64,13 +87,13 @@ export function MockInterview() {
                 <h3 className="text-lg font-semibold">Interview Question</h3>
               </div>
               <span className="text-sm text-muted-foreground">
-                {currentQuestion + 1} / {interviewQuestions.length}
+                {currentQuestion + 1} / {questions.length}
               </span>
             </div>
 
             <div className="bg-gradient-to-br from-indigo-50 to-purple-50 p-6 rounded-xl mb-6">
               <p className="text-xl font-medium text-gray-900">
-                {interviewQuestions[currentQuestion]}
+                {questions[currentQuestion]}
               </p>
             </div>
 
@@ -84,9 +107,9 @@ export function MockInterview() {
               </button>
               <button
                 onClick={() =>
-                  setCurrentQuestion(Math.min(interviewQuestions.length - 1, currentQuestion + 1))
+                  setCurrentQuestion(Math.min(questions.length - 1, currentQuestion + 1))
                 }
-                disabled={currentQuestion === interviewQuestions.length - 1}
+                disabled={currentQuestion === questions.length - 1}
                 className="flex-1 px-4 py-3 bg-[#4f46e5] text-white rounded-lg font-medium hover:bg-[#4338ca] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Next Question
@@ -131,40 +154,40 @@ export function MockInterview() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium">Confidence</span>
-                  <span className="text-sm font-bold text-[#10b981]">82%</span>
+                  <span className="text-sm font-bold text-[#10b981]">{feedback.confidence}%</span>
                 </div>
                 <div className="bg-accent rounded-full h-2">
-                  <div className="h-2 rounded-full bg-[#10b981] w-[82%]"></div>
+                  <div className="h-2 rounded-full bg-[#10b981]" style={{ width: `${feedback.confidence}%` }}></div>
                 </div>
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium">Communication</span>
-                  <span className="text-sm font-bold text-[#4f46e5]">78%</span>
+                  <span className="text-sm font-bold text-[#4f46e5]">{feedback.communication}%</span>
                 </div>
                 <div className="bg-accent rounded-full h-2">
-                  <div className="h-2 rounded-full bg-[#4f46e5] w-[78%]"></div>
+                  <div className="h-2 rounded-full bg-[#4f46e5]" style={{ width: `${feedback.communication}%` }}></div>
                 </div>
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium">Clarity</span>
-                  <span className="text-sm font-bold text-[#f59e0b]">75%</span>
+                  <span className="text-sm font-bold text-[#f59e0b]">{feedback.clarity}%</span>
                 </div>
                 <div className="bg-accent rounded-full h-2">
-                  <div className="h-2 rounded-full bg-[#f59e0b] w-[75%]"></div>
+                  <div className="h-2 rounded-full bg-[#f59e0b]" style={{ width: `${feedback.clarity}%` }}></div>
                 </div>
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium">Body Language</span>
-                  <span className="text-sm font-bold text-[#8b5cf6]">85%</span>
+                  <span className="text-sm font-bold text-[#8b5cf6]">{feedback.bodyLanguage}%</span>
                 </div>
                 <div className="bg-accent rounded-full h-2">
-                  <div className="h-2 rounded-full bg-[#8b5cf6] w-[85%]"></div>
+                  <div className="h-2 rounded-full bg-[#8b5cf6]" style={{ width: `${feedback.bodyLanguage}%` }}></div>
                 </div>
               </div>
             </div>
@@ -202,18 +225,12 @@ export function MockInterview() {
           <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-6">
             <h3 className="text-lg font-semibold mb-3 text-blue-900">💡 Suggestions</h3>
             <ul className="space-y-2 text-sm text-blue-900">
-              <li className="flex items-start gap-2">
-                <span className="text-blue-600 mt-1">•</span>
-                <span>Add more specific examples</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-blue-600 mt-1">•</span>
-                <span>Reduce filler words ("um", "like")</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-blue-600 mt-1">•</span>
-                <span>Improve eye contact</span>
-              </li>
+              {suggestions.map((s: string, i: number) => (
+                <li key={i} className="flex items-start gap-2">
+                  <span className="text-blue-600 mt-1">•</span>
+                  <span>{s}</span>
+                </li>
+              ))}
             </ul>
           </div>
 

@@ -1,45 +1,40 @@
 import { FileText, Upload, CheckCircle, AlertCircle, TrendingUp, Download } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
-
-const scoreData = [
-  { name: "Score", value: 78, color: "#4f46e5" },
-  { name: "Remaining", value: 22, color: "#e5e7eb" },
-];
-
-const sections = [
-  { name: "Contact Information", status: "complete", score: 100 },
-  { name: "Professional Summary", status: "good", score: 85 },
-  { name: "Work Experience", status: "good", score: 80 },
-  { name: "Education", status: "complete", score: 100 },
-  { name: "Skills", status: "warning", score: 65 },
-  { name: "Projects", status: "good", score: 75 },
-  { name: "Achievements", status: "missing", score: 0 },
-];
-
-const suggestions = [
-  {
-    type: "critical",
-    title: "Add Quantifiable Achievements",
-    description: "Use numbers and metrics to demonstrate impact (e.g., 'Improved performance by 40%')",
-  },
-  {
-    type: "important",
-    title: "Optimize for ATS",
-    description: "Include more relevant keywords from the job description",
-  },
-  {
-    type: "suggestion",
-    title: "Improve Skills Section",
-    description: "Group skills by category (Technical, Soft Skills, Tools)",
-  },
-  {
-    type: "suggestion",
-    title: "Add Action Verbs",
-    description: "Start bullet points with strong action verbs (Led, Developed, Implemented)",
-  },
-];
+import { useState, useEffect } from "react";
+import { getResumeAnalysis } from "../../api/api";
 
 export function ResumeAnalyzer() {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getResumeAnalysis()
+      .then(setData)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const analysisScore = data?.score || 78;
+  const scoreDataData = [
+    { name: "Score", value: analysisScore, color: "#4f46e5" },
+    { name: "Remaining", value: 100 - analysisScore, color: "#e5e7eb" },
+  ];
+
+  const analysisSections = data?.sections || [
+    { name: "Contact Information", status: "complete", score: 100 },
+    { name: "Professional Summary", status: "good", score: 85 },
+    { name: "Work Experience", status: "good", score: 80 },
+    { name: "Education", status: "complete", score: 100 },
+    { name: "Skills", status: "warning", score: 65 },
+    { name: "Projects", status: "good", score: 75 },
+    { name: "Achievements", status: "missing", score: 0 },
+  ];
+
+  const analysisSuggestions = data?.suggestions || [
+    { type: "critical", title: "Add Quantifiable Achievements", description: "Use metrics..." },
+  ];
+
+  const keywords = data?.keywords || { coverage: 68, found: 12, missing: 6, suggested: 8, relevance: "High" };
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -77,7 +72,7 @@ export function ResumeAnalyzer() {
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
                 <Pie
-                  data={scoreData}
+                  data={scoreDataData}
                   cx="50%"
                   cy="50%"
                   innerRadius={70}
@@ -86,7 +81,7 @@ export function ResumeAnalyzer() {
                   endAngle={-270}
                   dataKey="value"
                 >
-                  {scoreData.map((entry, index) => (
+                  {scoreDataData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
@@ -94,15 +89,15 @@ export function ResumeAnalyzer() {
             </ResponsiveContainer>
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center">
-                <div className="text-4xl font-bold text-[#4f46e5]">78</div>
+                <div className="text-4xl font-bold text-[#4f46e5]">{analysisScore}</div>
                 <div className="text-sm text-muted-foreground">out of 100</div>
               </div>
             </div>
           </div>
           <div className="mt-6 text-center">
-            <p className="text-sm font-medium text-[#10b981] mb-2">Good Resume</p>
+            <p className="text-sm font-medium text-[#10b981] mb-2">{data?.status || "Good Resume"}</p>
             <p className="text-xs text-muted-foreground">
-              Your resume is above average. Follow the suggestions below to improve.
+              {data?.message || "Your resume is above average. Follow the suggestions below to improve."}
             </p>
           </div>
         </div>
@@ -111,7 +106,7 @@ export function ResumeAnalyzer() {
         <div className="lg:col-span-2 bg-card rounded-2xl p-6 border border-border shadow-sm">
           <h3 className="text-lg font-semibold mb-6">Section Analysis</h3>
           <div className="space-y-3">
-            {sections.map((section, index) => (
+            {analysisSections.map((section: any, index: number) => (
               <div
                 key={index}
                 className="flex items-center justify-between p-4 rounded-xl bg-accent"
@@ -155,7 +150,7 @@ export function ResumeAnalyzer() {
       <div className="bg-card rounded-2xl p-6 border border-border shadow-sm">
         <h3 className="text-lg font-semibold mb-6">Improvement Suggestions</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {suggestions.map((suggestion, index) => (
+          {analysisSuggestions.map((suggestion: any, index: number) => (
             <div
               key={index}
               className={`p-4 rounded-xl border-2 ${
@@ -194,28 +189,28 @@ export function ResumeAnalyzer() {
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium">Keyword Coverage</span>
-            <span className="text-sm font-bold text-[#4f46e5]">68%</span>
+            <span className="text-sm font-bold text-[#4f46e5]">{keywords.coverage}%</span>
           </div>
           <div className="bg-accent rounded-full h-3">
-            <div className="h-3 rounded-full bg-gradient-to-r from-[#4f46e5] to-[#8b5cf6] w-[68%]"></div>
+            <div className="h-3 rounded-full bg-gradient-to-r from-[#4f46e5] to-[#8b5cf6]" style={{ width: `${keywords.coverage}%` }}></div>
           </div>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div className="p-3 bg-green-50 rounded-lg">
             <p className="text-xs text-muted-foreground mb-1">Found</p>
-            <p className="text-lg font-bold text-green-700">12</p>
+            <p className="text-lg font-bold text-green-700">{keywords.found}</p>
           </div>
           <div className="p-3 bg-red-50 rounded-lg">
             <p className="text-xs text-muted-foreground mb-1">Missing</p>
-            <p className="text-lg font-bold text-red-700">6</p>
+            <p className="text-lg font-bold text-red-700">{keywords.missing}</p>
           </div>
           <div className="p-3 bg-blue-50 rounded-lg">
             <p className="text-xs text-muted-foreground mb-1">Suggested</p>
-            <p className="text-lg font-bold text-blue-700">8</p>
+            <p className="text-lg font-bold text-blue-700">{keywords.suggested}</p>
           </div>
           <div className="p-3 bg-purple-50 rounded-lg">
             <p className="text-xs text-muted-foreground mb-1">Relevance</p>
-            <p className="text-lg font-bold text-purple-700">High</p>
+            <p className="text-lg font-bold text-purple-700">{keywords.relevance}</p>
           </div>
         </div>
       </div>

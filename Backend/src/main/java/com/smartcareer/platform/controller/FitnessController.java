@@ -7,7 +7,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/fitness")
-@CrossOrigin(origins = "http://localhost:5173")
 public class FitnessController {
 
     private final FitnessService service;

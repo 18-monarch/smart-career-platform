@@ -20,7 +20,28 @@ public class ResourceService {
     }
 
     public List<Resource> getAll() {
-        return repo.findAll();
+        List<Resource> resources = repo.findAll();
+        if (resources.isEmpty()) {
+            return getDefaultResources();
+        }
+        return resources;
+    }
+
+    private List<Resource> getDefaultResources() {
+        List<Resource> defaults = new java.util.ArrayList<>();
+        defaults.add(createResource("Cracking the Coding Interview", "Book", "Core", "https://example.com/ctci"));
+        defaults.add(createResource("LeetCode Patterns", "Guide", "Coding", "https://leetcode.com"));
+        defaults.add(createResource("System Design Primer", "Course", "Architecture", "https://github.com/donnemartin/system-design-primer"));
+        return defaults;
+    }
+
+    private Resource createResource(String title, String type, String category, String url) {
+        Resource r = new Resource();
+        r.setTitle(title);
+        r.setType(type);
+        r.setCategory(category);
+        r.setUrl(url);
+        return r;
     }
 
     public List<Resource> getByCategory(String category) {

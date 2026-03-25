@@ -1,5 +1,6 @@
 import { Briefcase, MapPin, DollarSign, Clock, Star, ExternalLink } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getJobRecommendations } from "../../api/api";
 
 const filters = ["All", "Remote", "On-site", "Hybrid"];
 
@@ -80,6 +81,33 @@ const internships = [
 
 export function InternshipRecommendation() {
   const [selectedFilter, setSelectedFilter] = useState("All");
+  const [internshipsList, setInternshipsList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const userId = Number(localStorage.getItem("userId")) || 1;
+    getJobRecommendations(userId)
+      .then((res) => {
+          // Adapt backend job data to frontend internship structure if needed
+          const adapted = res.map((job: any) => ({
+              role: job.title,
+              company: job.company,
+              stipend: job.salary,
+              type: job.type,
+              matchPercentage: parseInt(job.match) || 85,
+              location: "Remote",
+              duration: "3 months",
+              requiredSkills: job.skills.split(", "),
+              gradient: "from-indigo-500 to-purple-500",
+              logo: job.company.charAt(0)
+          }));
+          setInternshipsList(adapted);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const displayInternships = internshipsList.length > 0 ? internshipsList : internships;
 
   return (
     <div className="space-y-6">
@@ -120,7 +148,7 @@ export function InternshipRecommendation() {
 
       {/* Internship Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {internships.map((internship, index) => (
+        {displayInternships.map((internship, index) => (
           <div
             key={index}
             className="bg-card rounded-2xl border border-border shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
@@ -172,10 +200,10 @@ export function InternshipRecommendation() {
               <div className="mb-4">
                 <p className="text-sm font-medium mb-2">Required Skills:</p>
                 <div className="flex flex-wrap gap-2">
-                  {internship.requiredSkills.map((skill, i) => (
+                  {(internship.requiredSkills || []).map((skill: string, i: number) => (
                     <span
                       key={i}
-                      className="px-3 py-1 bg-accent text-accent-foreground rounded-full text-xs font-medium"
+                      className="px-3 py-1 bg-white/20 rounded-full text-xs font-medium"
                     >
                       {skill}
                     </span>

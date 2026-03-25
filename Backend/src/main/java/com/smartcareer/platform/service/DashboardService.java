@@ -94,6 +94,37 @@ public class DashboardService {
         dto.setCareerProgress(careerProgress);
         dto.setProductivityData(productivityData);
         dto.setCodingData(codingData);
+
+        // Add today's metrics
+        List<Map<String, Object>> metrics = new ArrayList<>();
+        metrics.add(createMetric("Distraction Time", "1.5h", "Social media", "amber"));
+        metrics.add(createMetric("Fitness Score", "82%", "Daily activity", "emerald"));
+        metrics.add(createMetric("Internship Ready", "76%", "Skill match", "indigo"));
+        dto.setMetrics(metrics);
+
+        // Add notifications
+        List<Map<String, Object>> notifications = new ArrayList<>();
+        notifications.add(createNotification("7-day coding streak achieved! 🏆", "2h ago"));
+        notifications.add(createNotification("Mock interview scheduled for tomorrow", "5h ago"));
+        notifications.add(createNotification("New internship matches available", "1d ago"));
+        dto.setNotifications(notifications);
+
         return dto;
+    }
+
+    private Map<String, Object> createMetric(String label, String value, String sub, String color) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("label", label);
+        m.put("value", value);
+        m.put("sub", sub);
+        m.put("color", color);
+        return m;
+    }
+
+    private Map<String, Object> createNotification(String title, String time) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("title", title);
+        m.put("time", time);
+        return m;
     }
 }

@@ -1,4 +1,5 @@
-import { Outlet, Link, useLocation } from "react-router";
+import React, { useState } from "react";
+import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Target,
@@ -18,6 +19,9 @@ import {
   BarChart3,
   Bell,
   User,
+  Menu,
+  X,
+  LogOut,
 } from "lucide-react";
 
 const navigation = [
@@ -40,83 +44,138 @@ const navigation = [
 ];
 
 export function DashboardLayout() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const userName = localStorage.getItem("userName") || "User";
+
+  const handleLogout = () => {
+    localStorage.removeItem("userId");
+    localStorage.removeItem("userName");
+    navigate("/login");
+  };
+
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
+    <div className="flex h-screen bg-neutral-50 overflow-hidden font-sans">
+      
+      {/* Mobile Sidebar Overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm transition-opacity"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 bg-card border-r border-border flex flex-col shadow-sm">
+      <aside className={`
+        fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-neutral-200 flex flex-col shadow-xl transition-transform duration-300 transform
+        lg:translate-x-0 lg:static lg:inset-auto lg:shadow-none
+        ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
+      `}>
         {/* Logo */}
-        <div className="h-16 flex items-center px-6 border-b border-border">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#4f46e5] to-[#8b5cf6] flex items-center justify-center">
+        <div className="h-16 flex items-center justify-between px-6 border-b border-neutral-100">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-200">
               <Target className="w-5 h-5 text-white" />
             </div>
-            <span className="text-lg font-semibold bg-gradient-to-r from-[#4f46e5] to-[#8b5cf6] bg-clip-text text-transparent">
+            <span className="text-xl font-bold tracking-tight text-neutral-900">
               Smart Career
             </span>
           </div>
+          <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden p-2 text-neutral-400 hover:text-neutral-600">
+            <X className="w-6 h-6" />
+          </button>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto py-4 px-3">
-          <div className="space-y-1">
-            {navigation.map((item) => {
-              const isActive = location.pathname === item.path;
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
-                    isActive
-                      ? "bg-[#4f46e5] text-white shadow-md"
-                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                  }`}
-                >
-                  <item.icon className="w-5 h-5" />
-                  <span className="text-sm">{item.name}</span>
-                </Link>
-              );
-            })}
-          </div>
+        <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1 custom-scrollbar">
+          {navigation.map((item) => {
+            const isActive = location.pathname === item.path;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                onClick={() => setIsSidebarOpen(false)}
+                className={`flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200 group ${
+                  isActive
+                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-100 font-medium"
+                    : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900"
+                }`}
+              >
+                <item.icon className={`w-5 h-5 ${isActive ? "text-white" : "text-neutral-400 group-hover:text-indigo-600"}`} />
+                <span className="text-sm tracking-wide">{item.name}</span>
+              </Link>
+            );
+          })}
         </nav>
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Navigation Bar */}
-        <header className="h-16 bg-card border-b border-border flex items-center justify-between px-6 shadow-sm">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Header */}
+        <header className="h-16 shrink-0 bg-white border-b border-neutral-200 flex items-center justify-between px-4 sm:px-6 z-30 shadow-sm">
           <div className="flex items-center gap-4">
-            <h1 className="text-xl font-semibold text-foreground">
+            <button 
+              onClick={toggleSidebar}
+              className="p-2 -ml-2 text-neutral-500 hover:bg-neutral-100 rounded-lg lg:hidden"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+            <h1 className="text-lg font-bold text-neutral-900 truncate">
               {navigation.find((item) => item.path === location.pathname)?.name || "Dashboard"}
             </h1>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
             {/* Notifications */}
-            <button className="relative p-2 rounded-lg hover:bg-accent transition-colors">
-              <Bell className="w-5 h-5 text-muted-foreground" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-[#ef4444] rounded-full"></span>
+            <button className="relative p-2 rounded-xl text-neutral-500 hover:bg-neutral-100 transition-colors">
+              <Bell className="w-5 h-5" />
+              <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
             </button>
 
-            {/* User Profile */}
-            <button className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#4f46e5] to-[#8b5cf6] flex items-center justify-center">
-                <User className="w-5 h-5 text-white" />
+            {/* Profile */}
+            <div className="h-8 w-px bg-neutral-200 hidden sm:block mx-1"></div>
+
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2.5 p-1 rounded-xl">
+                <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center overflow-hidden">
+                  <User className="w-5 h-5 text-indigo-600" />
+                </div>
+                <div className="hidden sm:block text-left">
+                  <p className="text-sm font-semibold text-neutral-900 leading-tight">{userName}</p>
+                  <p className="text-[10px] uppercase tracking-wider font-bold text-indigo-600">Member</p>
+                </div>
               </div>
-              <div className="text-left">
-                <p className="text-sm font-medium">Student Name</p>
-                <p className="text-xs text-muted-foreground">Premium</p>
-              </div>
-            </button>
+
+              <button
+                onClick={handleLogout}
+                title="Logout"
+                className="p-2 rounded-xl text-neutral-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-6">
-          <Outlet />
+        {/* Dynamic Page Content */}
+        <main className="flex-1 overflow-y-auto bg-neutral-50/50 p-4 sm:p-6 md:p-8 custom-scrollbar">
+          <div className="max-w-7xl mx-auto">
+            <Outlet />
+          </div>
         </main>
       </div>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e5e5e5; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #d4d4d4; }
+      `}} />
+
     </div>
   );
 }

@@ -7,7 +7,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/productivity")
-@CrossOrigin(origins = "http://localhost:5173")
 public class ProductivityController {
 
     private final ProductivityService service;

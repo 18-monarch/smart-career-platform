@@ -11,6 +11,8 @@ public class DashboardDTO {
     private int careerProgress;
     private List<Map<String, Object>> productivityData;
     private List<Map<String, Object>> codingData;
+    private List<Map<String, Object>> metrics;
+    private List<Map<String, Object>> notifications;
 
     public DashboardDTO() {}
 
@@ -31,4 +33,10 @@ public class DashboardDTO {
 
     public List<Map<String, Object>> getCodingData() { return codingData; }
     public void setCodingData(List<Map<String, Object>> codingData) { this.codingData = codingData; }
+
+    public List<Map<String, Object>> getMetrics() { return metrics; }
+    public void setMetrics(List<Map<String, Object>> metrics) { this.metrics = metrics; }
+
+    public List<Map<String, Object>> getNotifications() { return notifications; }
+    public void setNotifications(List<Map<String, Object>> notifications) { this.notifications = notifications; }
 }

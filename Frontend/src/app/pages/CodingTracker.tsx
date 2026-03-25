@@ -35,8 +35,8 @@ export function CodingTracker() {
     const fetchData = async () => {
 
       try {
-
-        const data = await getCodingActivity(1);
+        const userId = Number(localStorage.getItem("userId")) || 1;
+        const data = await getCodingActivity(userId);
 
         setActivities(data);
 
