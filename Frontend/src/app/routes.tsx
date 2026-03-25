@@ -31,21 +31,26 @@ const requireAuth = (element: JSX.Element) => {
 
 export const router = createBrowserRouter([
   {
+    path: "/",
+    element: <Navigate to="/login" replace />,
+  },
+
+  {
     path: "/login",
     element: <Login />,
   },
+
   {
     path: "/register",
     element: <Register />,
   },
 
   {
-    path: "/",
+    path: "/dashboard",
     element: requireAuth(<DashboardLayout />),
 
     children: [
       { index: true, element: <Dashboard /> },
-      { path: "dashboard", element: <Dashboard /> },
 
       { path: "career-path", element: <CareerPath /> },
       { path: "skill-gap", element: <SkillGap /> },
