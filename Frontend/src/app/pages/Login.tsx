@@ -9,45 +9,45 @@ export function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
+  e.preventDefault();
 
-    const trimmedEmail = email.trim();
-    const trimmedPassword = password.trim();
+  if (loading) return;
 
-    try {
-      if (isSignup) {
-        const res = await createUser({ name: name.trim(), email: trimmedEmail, password: trimmedPassword });
-        if (!res) throw new Error("Registration failed. Email might already exist.");
-        
-        alert("Account created! Please login.");
-        setIsSignup(false);
-      } else {
-        const data = await loginUser(trimmedEmail, trimmedPassword);
+  setLoading(true);
+  setError("");
 
-        if (!data) {
-          setError("Invalid email or password. Please check your credentials.");
-          return;
-        }
+  const trimmedEmail = email.trim();
+  const trimmedPassword = password.trim();
 
-        if (!data.id) {
-          setError("Server returned an invalid response. Please try again.");
-          return;
-        }
+  try {
+    if (isSignup) {
+      await createUser({
+        name: name.trim(),
+        email: trimmedEmail,
+        password: trimmedPassword
+      });
 
-        localStorage.setItem("userId", String(data.id));
-        localStorage.setItem("userName", data.name || "");
+      alert("Account created! Please login.");
+      setIsSignup(false);
+    } else {
+      const data = await loginUser(trimmedEmail, trimmedPassword);
 
-        navigate("/dashboard");
-      }
-    } catch (err: any) {
-      setError(err.message || "An unexpected error occurred. Please try again later.");
+      localStorage.setItem("userId", String(data.id));
+      localStorage.setItem("userName", data.name || "");
+
+      navigate("/dashboard");
     }
-  };
+  } catch (err: any) {
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen flex">
@@ -143,10 +143,10 @@ export function Login() {
 
             {/* BUTTON */}
             <button
-              type="submit"
+              type="submit" disabled={loading}
               className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl font-medium hover:shadow-lg transition flex items-center justify-center gap-2"
             >
-              {isSignup ? "Create Account" : "Sign In"}
+              {loading ? "Processing..." : (isSignup ? "Create Account" : "Sign In")}
               <ArrowRight className="w-5 h-5" />
             </button>
 
