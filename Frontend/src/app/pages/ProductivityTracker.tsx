@@ -14,8 +14,7 @@ export function ProductivityTracker() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const userId = Number(localStorage.getItem("userId")) || 1;
-    getProductivityStats(userId)
+    getProductivityStats()
       .then(setStats)
       .catch(console.error)
       .finally(() => setLoading(false));

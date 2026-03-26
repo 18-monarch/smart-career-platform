@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getDashboard, getNotifications } from "../../api/api";
+import { getDashboard } from "../../api/api";
 import { DashboardLayout } from "../components/DashboardLayout";
 
 // Removed redundant local DashboardLayout
@@ -26,27 +26,24 @@ import {
 
 export function Dashboard() {
   const [data, setData] = useState<any>(null);
-  const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    const userId = localStorage.getItem("userId");
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const res = await getDashboard();
+        setData(res);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    if (!userId) {
-      navigate("/login");
-      return;
-    }
-
-    getDashboard(Number(userId))
-      .then((res) => setData(res))
-      .catch(() => alert("Dashboard failed"));
-
-    getNotifications(Number(userId))
-      .then((res) => setNotifications(res || []))
-      .catch(() => setNotifications([]))
-      .finally(() => setLoading(false));
+    fetchData();
   }, []);
 
   // ✅ LOADING SKELETON
@@ -124,13 +121,13 @@ export function Dashboard() {
 
                 <defs>
                   <linearGradient id="colorHours" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4}/>
-                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
                   </linearGradient>
 
                   <linearGradient id="colorDistraction" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.4}/>
-                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
                   </linearGradient>
                 </defs>
 
@@ -157,7 +154,7 @@ export function Dashboard() {
                 <YAxis axisLine={false} tickLine={false} />
                 <Tooltip />
 
-                <Bar dataKey="problems" fill="#10b981" radius={[6,6,0,0]} />
+                <Bar dataKey="problems" fill="#10b981" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -172,11 +169,11 @@ export function Dashboard() {
             <h3 className="font-semibold mb-4">Today's Metrics</h3>
 
             {(data.metrics || []).map((m: any, i: number) => (
-              <MetricItem 
+              <MetricItem
                 key={i}
-                title={m.label} 
-                value={m.value} 
-                color={m.color === 'amber' ? 'bg-amber-100 text-amber-600' : m.color === 'emerald' ? 'bg-emerald-100 text-emerald-600' : 'bg-indigo-100 text-indigo-600'} 
+                title={m.label}
+                value={m.value}
+                color={m.color === 'amber' ? 'bg-amber-100 text-amber-600' : m.color === 'emerald' ? 'bg-emerald-100 text-emerald-600' : 'bg-indigo-100 text-indigo-600'}
               />
             ))}
 
@@ -194,21 +191,14 @@ export function Dashboard() {
           <div className="bg-white p-6 rounded-2xl shadow-sm border">
             <h3 className="font-semibold mb-4">Notifications</h3>
 
-            {notifications.length === 0 && (!data.notifications || data.notifications.length === 0) && (
+            {(!data.notifications || data.notifications.length === 0) && (
               <p className="text-gray-400 text-sm">No notifications</p>
             )}
 
             {(data.notifications || []).map((n: any, i: number) => (
               <div key={`d-${i}`} className="bg-gray-50 p-3 rounded-xl text-sm mb-2 border">
-                <p className="font-medium text-gray-800">{n.title}</p>
+                <p className="font-medium text-gray-800">{n.title || n.message}</p>
                 <p className="text-xs text-gray-400 mt-1">{n.time || "Recent"}</p>
-              </div>
-            ))}
-
-            {notifications.map((n: any, i: number) => (
-              <div key={`n-${i}`} className="bg-gray-50 p-3 rounded-xl text-sm mb-2 border">
-                <p className="font-medium text-gray-800">{n.message || n.title}</p>
-                <p className="text-xs text-gray-400 mt-1">Recent</p>
               </div>
             ))}
           </div>

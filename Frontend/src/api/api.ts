@@ -1,117 +1,134 @@
 const BASE_URL =
   import.meta.env.VITE_API_URL || "http://localhost:8080/api";
 
-// Generic safe fetch — must be defined before all callers
-const safeFetch = async (url: string, options?: RequestInit) => {
-  try {
-    const res = await fetch(url, options);
+// ✅ SAFE FETCH WITH JWT
+const safeFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem("token");
 
-    if (!res.ok) {
-      if (res.status === 401) throw new Error("Invalid email or password");
-      if (res.status === 400) throw new Error("Bad request. Please check your data.");
-      const text = await res.text();
-      throw new Error(text || `Error ${res.status}`);
-    }
+  const headers: any = {
+    "Content-Type": "application/json",
+    ...(options.headers || {}),
+  };
 
-    return await res.json();
-  } catch (err: any) {
-    console.error("API ERROR:", err);
-    throw err;
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
   }
+
+  const res = await fetch(url, {
+    ...options,
+    headers,
+  });
+
+  if (!res.ok) {
+    throw new Error(await res.text());
+  }
+
+  return res.json();
 };
 
-export const getNotifications = async (userId: number) => {
-  return safeFetch(`${BASE_URL}/notifications/${userId}`);
+export const getNotifications = async () => {
+  return safeFetch(`${BASE_URL}/notifications`);
 };
 
 // ================= AUTH =================
 
+// 🔐 LOGIN
 export const loginUser = async (email: string, password: string) => {
   return safeFetch(`${BASE_URL}/users/login`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
   });
 };
 
+// 🔐 REGISTER
 export const createUser = async (user: any) => {
   return safeFetch(`${BASE_URL}/users`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(user),
   });
 };
 
 // ================= DASHBOARD =================
 
-export const getDashboard = async (userId: number) => {
-  return safeFetch(`${BASE_URL}/dashboard/${userId}`);
+export const getDashboard = async () => {
+  return safeFetch(`${BASE_URL}/dashboard`);
 };
 
-// CAREER
+// ================= CAREER =================
+
 export const getCareers = () =>
   safeFetch(`${BASE_URL}/career`);
 
 export const selectCareer = (career: string) =>
   safeFetch(`${BASE_URL}/career/select`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ career }),
   });
 
-// SKILL GAP
-export const getSkillGap = (userId: number) =>
-  safeFetch(`${BASE_URL}/skills/${userId}`);
+// ================= SKILL GAP =================
 
-// ROADMAP
-export const getRoadmap = (userId: number) =>
-  safeFetch(`${BASE_URL}/roadmap/${userId}`);
-  
+export const getSkillGap = () =>
+  safeFetch(`${BASE_URL}/skills`);
+
+// ================= ROADMAP =================
+
+export const getRoadmap = () =>
+  safeFetch(`${BASE_URL}/roadmap`);
+
 export const toggleMilestone = (milestoneId: number) =>
   safeFetch(`${BASE_URL}/roadmap/milestone/${milestoneId}/toggle`, {
     method: "POST",
   });
 
-// RESOURCES
+// ================= RESOURCES =================
+
 export const getResources = (category?: string) =>
-  safeFetch(`${BASE_URL}/resources${category && category !== "All" ? `?category=${category}` : ""}`);
+  safeFetch(
+    `${BASE_URL}/resources${
+      category && category !== "All" ? `?category=${category}` : ""
+    }`
+  );
 
-// CODING TRACKER
-export const getCodingActivity = (userId: number) =>
-  safeFetch(`${BASE_URL}/coding/${userId}`);
+// ================= CODING =================
 
-// CONTEST TRACKER
-export const getContestStats = (userId: number) =>
-  safeFetch(`${BASE_URL}/contests/${userId}`);
+export const getCodingActivity = () =>
+  safeFetch(`${BASE_URL}/coding`);
 
-// JOBS
-export const getJobRecommendations = (userId: number) =>
-  safeFetch(`${BASE_URL}/jobs/recommend?userId=${userId}`);
+// ================= CONTEST =================
 
-// PRODUCTIVITY
-export const getProductivityStats = (userId: number) =>
-  safeFetch(`${BASE_URL}/productivity/${userId}`);
+export const getContestStats = () =>
+  safeFetch(`${BASE_URL}/contests`);
 
-// FITNESS
-export const getFitnessStats = (userId: number) =>
-  safeFetch(`${BASE_URL}/fitness/${userId}`);
+// ================= JOBS =================
 
-// ANALYTICS
-export const getAnalytics = (userId: number) =>
-  safeFetch(`${BASE_URL}/analytics/${userId}`);
+export const getJobRecommendations = () =>
+  safeFetch(`${BASE_URL}/jobs/recommend`);
 
-// MOCK TEST
+// ================= PRODUCTIVITY =================
+
+export const getProductivityStats = () =>
+  safeFetch(`${BASE_URL}/productivity`);
+
+// ================= FITNESS =================
+
+export const getFitnessStats = () =>
+  safeFetch(`${BASE_URL}/fitness`);
+
+// ================= ANALYTICS =================
+
+export const getAnalytics = () =>
+  safeFetch(`${BASE_URL}/analytics`);
+
+// ================= MOCK =================
+
 export const getMockTest = () =>
   safeFetch(`${BASE_URL}/mock-test`);
 
-// INTERNSHIP PREP
 export const getInternshipPrep = () =>
   safeFetch(`${BASE_URL}/internship-prep`);
 
-// MOCK INTERVIEW
 export const getMockInterview = () =>
   safeFetch(`${BASE_URL}/mock-interview`);
 
-// RESUME ANALYZER
 export const getResumeAnalysis = () =>
   safeFetch(`${BASE_URL}/resume-analyzer`);

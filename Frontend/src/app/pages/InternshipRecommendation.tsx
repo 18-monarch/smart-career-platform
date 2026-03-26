@@ -85,8 +85,7 @@ export function InternshipRecommendation() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const userId = Number(localStorage.getItem("userId")) || 1;
-    getJobRecommendations(userId)
+    getJobRecommendations()
       .then((res) => {
           // Adapt backend job data to frontend internship structure if needed
           const adapted = res.map((job: any) => ({

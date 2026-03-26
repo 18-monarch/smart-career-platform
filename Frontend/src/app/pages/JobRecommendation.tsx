@@ -7,8 +7,7 @@ export function JobRecommendation() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const userId = Number(localStorage.getItem("userId")) || 1;
-    getJobRecommendations(userId)
+    getJobRecommendations()
       .then(setJobs)
       .catch(console.error)
       .finally(() => setLoading(false));

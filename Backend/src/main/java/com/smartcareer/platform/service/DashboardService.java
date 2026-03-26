@@ -1,130 +1,102 @@
 package com.smartcareer.platform.service;
 
-import com.smartcareer.platform.dto.DashboardDTO;
-import com.smartcareer.platform.entity.CodingActivity;
-import com.smartcareer.platform.entity.ProductivityLog;
-import com.smartcareer.platform.repository.CodingActivityRepository;
-import com.smartcareer.platform.repository.ProductivityLogRepository;
+import com.smartcareer.platform.entity.*;
+import com.smartcareer.platform.repository.*;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class DashboardService {
 
-    private final CodingActivityRepository codingRepo;
     private final ProductivityLogRepository productivityRepo;
+    private final CodingActivityRepository codingRepo;
+    private final NotificationRepository notificationRepo;
+    private final SkillAssessmentRepository skillRepo;
+    private final UserRepository userRepo;
 
-    public DashboardService(
-            CodingActivityRepository codingRepo,
-            ProductivityLogRepository productivityRepo) {
-        this.codingRepo = codingRepo;
+    public DashboardService(ProductivityLogRepository productivityRepo,
+                            CodingActivityRepository codingRepo,
+                            NotificationRepository notificationRepo,
+                            SkillAssessmentRepository skillRepo,
+                            UserRepository userRepo) {
         this.productivityRepo = productivityRepo;
+        this.codingRepo = codingRepo;
+        this.notificationRepo = notificationRepo;
+        this.skillRepo = skillRepo;
+        this.userRepo = userRepo;
     }
 
-    public DashboardDTO getDashboardStats(Long userId) {
+    public Map<String, Object> getDashboardData(String email) {
+        User user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Long userId = user.getId();
 
-        List<CodingActivity> activities = codingRepo.findByUserId(userId);
-        List<ProductivityLog> prodLogs = productivityRepo.findByUserIdOrderByDateAsc(userId);
+        List<ProductivityLog> productivityLogs = productivityRepo.findByUserIdOrderByDateAsc(userId);
+        List<CodingActivity> codingActivities = codingRepo.findByUserId(userId);
+        List<Notification> notifications = notificationRepo.findByUserIdOrderByCreatedAtDesc(userId);
+        List<SkillAssessment> skills = skillRepo.findByUserId(userId);
 
-        // Total problems solved
-        int problemsSolved = activities.stream()
+        // Calculate scores
+        double avgProductivity = productivityLogs.stream()
+                .mapToInt(ProductivityLog::getProductivityScore)
+                .average().orElse(0.0);
+
+        double totalHours = productivityLogs.stream()
+                .mapToDouble(ProductivityLog::getLearningHours)
+                .sum();
+
+        int totalProblems = codingActivities.stream()
                 .mapToInt(CodingActivity::getProblemsSolved)
                 .sum();
 
-        // Learning hours from latest productivity log
-        double learningHours = prodLogs.isEmpty() ? 0 :
-                prodLogs.get(prodLogs.size() - 1).getLearningHours();
+        double careerProgress = skills.stream()
+                .mapToInt(SkillAssessment::getCurrentLevel)
+                .average().orElse(0.0) * 10;
 
-        // Avg productivity score
-        int productivityScore = (int) prodLogs.stream()
-                .mapToInt(ProductivityLog::getProductivityScore)
-                .average().orElse(0);
+        Map<String, Object> data = new HashMap<>();
+        data.put("id", user.getId());
+        data.put("name", user.getName());
+        data.put("email", user.getEmail());
+        data.put("productivityScore", Math.round(avgProductivity));
+        data.put("learningHours", totalHours);
+        data.put("problemsSolved", totalProblems);
+        data.put("careerProgress", Math.round(careerProgress));
 
-        // Career progress = % of milestones done (simple heuristic: ratio of problems solved)
-        int careerProgress = Math.min(100, (problemsSolved / 2));
+        // Productivity Chart Data
+        data.put("productivityData", productivityLogs.stream().map(log -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("day", log.getDate().getDayOfWeek().name().substring(0, 3));
+            map.put("hours", log.getLearningHours());
+            map.put("distraction", log.getDistractionHours());
+            return map;
+        }).collect(Collectors.toList()));
 
-        // Productivity chart data — last 7 days
-        List<Map<String, Object>> productivityData = new ArrayList<>();
-        for (int i = 6; i >= 0; i--) {
-            LocalDate date = LocalDate.now().minusDays(i);
-            final LocalDate fd = date;
-            String dayName = date.getDayOfWeek().name().substring(0, 3);
+        // Coding Chart Data
+        data.put("codingData", codingActivities.stream().map(activity -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("day", activity.getDate().getDayOfWeek().name().substring(0, 3));
+            map.put("problems", activity.getProblemsSolved());
+            return map;
+        }).collect(Collectors.toList()));
 
-            double hours = prodLogs.stream()
-                    .filter(p -> p.getDate().equals(fd))
-                    .mapToDouble(ProductivityLog::getLearningHours)
-                    .sum();
-
-            double distraction = prodLogs.stream()
-                    .filter(p -> p.getDate().equals(fd))
-                    .mapToDouble(ProductivityLog::getDistractionHours)
-                    .sum();
-
-            Map<String, Object> dayData = new LinkedHashMap<>();
-            dayData.put("day", dayName);
-            dayData.put("hours", hours);
-            dayData.put("distraction", distraction);
-            productivityData.add(dayData);
-        }
-
-        // Coding chart data — last 7 days
-        List<Map<String, Object>> codingData = new ArrayList<>();
-        for (int i = 6; i >= 0; i--) {
-            LocalDate date = LocalDate.now().minusDays(i);
-            final LocalDate fd = date;
-            String dayName = date.getDayOfWeek().name().substring(0, 3);
-
-            int problems = activities.stream()
-                    .filter(a -> a.getDate().equals(fd))
-                    .mapToInt(CodingActivity::getProblemsSolved)
-                    .sum();
-
-            Map<String, Object> dayData = new LinkedHashMap<>();
-            dayData.put("day", dayName);
-            dayData.put("problems", problems);
-            codingData.add(dayData);
-        }
-
-        DashboardDTO dto = new DashboardDTO();
-        dto.setProductivityScore(productivityScore);
-        dto.setLearningHours(learningHours);
-        dto.setProblemsSolved(problemsSolved);
-        dto.setCareerProgress(careerProgress);
-        dto.setProductivityData(productivityData);
-        dto.setCodingData(codingData);
-
-        // Add today's metrics
+        // Metrics
         List<Map<String, Object>> metrics = new ArrayList<>();
-        metrics.add(createMetric("Distraction Time", "1.5h", "Social media", "amber"));
-        metrics.add(createMetric("Fitness Score", "82%", "Daily activity", "emerald"));
-        metrics.add(createMetric("Internship Ready", "76%", "Skill match", "indigo"));
-        dto.setMetrics(metrics);
+        metrics.add(Map.of("label", "Distraction Time", "value", "1.5h", "color", "amber"));
+        metrics.add(Map.of("label", "Fitness Score", "value", "82%", "color", "emerald"));
+        metrics.add(Map.of("label", "Internship Ready", "value", "76%", "color", "indigo"));
+        data.put("metrics", metrics);
 
-        // Add notifications
-        List<Map<String, Object>> notifications = new ArrayList<>();
-        notifications.add(createNotification("7-day coding streak achieved! 🏆", "2h ago"));
-        notifications.add(createNotification("Mock interview scheduled for tomorrow", "5h ago"));
-        notifications.add(createNotification("New internship matches available", "1d ago"));
-        dto.setNotifications(notifications);
+        // Notifications
+        data.put("notifications", notifications.stream().limit(5).map(n -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("title", "Update");
+            map.put("message", n.getMessage());
+            map.put("time", "Recent");
+            return map;
+        }).collect(Collectors.toList()));
 
-        return dto;
-    }
-
-    private Map<String, Object> createMetric(String label, String value, String sub, String color) {
-        Map<String, Object> m = new LinkedHashMap<>();
-        m.put("label", label);
-        m.put("value", value);
-        m.put("sub", sub);
-        m.put("color", color);
-        return m;
-    }
-
-    private Map<String, Object> createNotification(String title, String time) {
-        Map<String, Object> m = new LinkedHashMap<>();
-        m.put("title", title);
-        m.put("time", time);
-        return m;
+        return data;
     }
 }

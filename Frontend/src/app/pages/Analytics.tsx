@@ -63,8 +63,7 @@ export function Analytics() {
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
-        const userId = Number(localStorage.getItem("userId")) || 1;
-        const data = await getAnalytics(userId);
+        const data = await getAnalytics();
         setAnalytics(data);
       } catch (err) {
         console.error("Failed to load analytics", err);

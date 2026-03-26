@@ -19,8 +19,7 @@ export function FitnessBalance() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const userId = Number(localStorage.getItem("userId")) || 1;
-    getFitnessStats(userId)
+    getFitnessStats()
       .then(setStats)
       .catch(console.error)
       .finally(() => setLoading(false));

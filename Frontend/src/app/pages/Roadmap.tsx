@@ -7,8 +7,7 @@ export function Roadmap() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const userId = Number(localStorage.getItem("userId")) || 1;
-    getRoadmap(userId)
+    getRoadmap()
       .then(setMilestones)
       .catch(console.error)
       .finally(() => setLoading(false));

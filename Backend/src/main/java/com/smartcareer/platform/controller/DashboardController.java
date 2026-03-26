@@ -1,31 +1,27 @@
 package com.smartcareer.platform.controller;
 
-import com.smartcareer.platform.dto.DashboardDTO;
 import com.smartcareer.platform.service.DashboardService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
-@RequestMapping("/api/dashboard")
+@RequestMapping("/api")
 public class DashboardController {
 
     private final DashboardService dashboardService;
 
-    public DashboardController(DashboardService dashboardService){
+    public DashboardController(DashboardService dashboardService) {
         this.dashboardService = dashboardService;
     }
 
-    @GetMapping("/{userId}")
-    public DashboardDTO getDashboard(@PathVariable Long userId){
-        try {
-            return dashboardService.getDashboardStats(userId);
-        } catch (Exception e) {
-            // fallback data so frontend NEVER breaks
-            DashboardDTO fallback = new DashboardDTO();
-            fallback.setProductivityScore(70);
-            fallback.setLearningHours(100);
-            fallback.setProblemsSolved(30);
-            fallback.setCareerProgress(50);
-            return fallback;
-        }
+    // ✅ CORRECT ENDPOINT USING JWT
+    @GetMapping("/dashboard")
+    public ResponseEntity<Map<String, Object>> getDashboard(Authentication authentication) {
+        String email = authentication.getName(); // from JWT
+        Map<String, Object> data = dashboardService.getDashboardData(email);
+        return ResponseEntity.ok(data);
     }
 }

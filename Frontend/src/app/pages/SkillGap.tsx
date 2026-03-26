@@ -8,8 +8,7 @@ export function SkillGap() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const userId = Number(localStorage.getItem("userId")) || 1;
-    getSkillGap(userId)
+    getSkillGap()
       .then(setSkills)
       .catch(console.error)
       .finally(() => setLoading(false));

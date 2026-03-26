@@ -8,8 +8,7 @@ export function ContestTracker() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const userId = Number(localStorage.getItem("userId")) || 1;
-    getContestStats(userId)
+    getContestStats()
       .then(setStats)
       .catch(console.error)
       .finally(() => setLoading(false));

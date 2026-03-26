@@ -14,43 +14,70 @@ export function Login() {
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (loading) return;
+    if (loading) return;
 
-  setLoading(true);
-  setError("");
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
+    const trimmedName = name.trim();
 
-  const trimmedEmail = email.trim();
-  const trimmedPassword = password.trim();
+    // ✅ Validation
+    if (!trimmedEmail || !trimmedPassword) {
+      setError("Email and password are required");
+      return;
+    }
 
-  try {
-    if (isSignup) {
-      await createUser({
-        name: name.trim(),
-        email: trimmedEmail,
-        password: trimmedPassword
-      });
+    if (isSignup && !trimmedName) {
+      setError("Name is required");
+      return;
+    }
 
-      alert("Account created! Please login.");
-      setIsSignup(false);
-    } else {
+    try {
+      setLoading(true);
+      setError("");
+
+      // ================= SIGNUP =================
+      if (isSignup) {
+        await createUser({
+          name: trimmedName,
+          email: trimmedEmail,
+          password: trimmedPassword,
+        });
+
+        alert("Account created successfully! Please login.");
+        setIsSignup(false);
+        setPassword(""); // optional cleanup
+        return;
+      }
+
+      // ================= LOGIN =================
       const data = await loginUser(trimmedEmail, trimmedPassword);
 
-      localStorage.setItem("userId", String(data.id));
-      localStorage.setItem("userName", data.name || "");
+      console.log("LOGIN RESPONSE:", data); // 👈 DEBUG
 
-      navigate("/dashboard");
+      if (!data || !data.token) {
+        throw new Error("Invalid login response");
+      }
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("userName", data.name || "User");
+      // localStorage.setItem("userId", String(data.id)); // No longer needed
+
+      navigate("/dashboard", { replace: true });
+      console.log("TOKEN:", localStorage.getItem("token"));
+
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Something went wrong. Try again.");
+    } finally {
+      setLoading(false);
     }
-  } catch (err: any) {
-    setError(err.message);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   return (
     <div className="min-h-screen flex">
+
       {/* LEFT SIDE */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
@@ -80,13 +107,13 @@ export function Login() {
           {/* FORM */}
           <form onSubmit={handleSubmit} className="space-y-4">
 
+            {/* NAME (Signup only) */}
             {isSignup && (
               <div>
                 <label className="block text-sm mb-2">Full Name</label>
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  required
                   placeholder="Enter your name"
                   className="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
@@ -102,7 +129,6 @@ export function Login() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  required
                   placeholder="Enter your email"
                   className="w-full pl-12 pr-4 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
@@ -118,7 +144,6 @@ export function Login() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  required
                   placeholder="Enter your password"
                   className="w-full pl-12 pr-4 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
@@ -135,7 +160,10 @@ export function Login() {
                   <input type="checkbox" className="rounded" />
                   Remember me
                 </label>
-                <button type="button" className="text-sm text-indigo-600 hover:underline">
+                <button
+                  type="button"
+                  className="text-sm text-indigo-600 hover:underline"
+                >
                   Forgot password?
                 </button>
               </div>
@@ -143,10 +171,15 @@ export function Login() {
 
             {/* BUTTON */}
             <button
-              type="submit" disabled={loading}
-              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl font-medium hover:shadow-lg transition flex items-center justify-center gap-2"
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl font-medium hover:shadow-lg transition flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              {loading ? "Processing..." : (isSignup ? "Create Account" : "Sign In")}
+              {loading
+                ? "Processing..."
+                : isSignup
+                  ? "Create Account"
+                  : "Sign In"}
               <ArrowRight className="w-5 h-5" />
             </button>
 
@@ -154,7 +187,9 @@ export function Login() {
 
           {/* SWITCH */}
           <p className="mt-6 text-center text-sm text-gray-500">
-            {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
+            {isSignup
+              ? "Already have an account?"
+              : "Don't have an account?"}{" "}
             <button
               onClick={() => setIsSignup(!isSignup)}
               className="text-indigo-600 font-medium hover:underline"
@@ -177,6 +212,7 @@ export function Login() {
           </p>
         </div>
       </div>
+
     </div>
   );
 }

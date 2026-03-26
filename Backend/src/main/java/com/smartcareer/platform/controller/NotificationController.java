@@ -2,6 +2,8 @@ package com.smartcareer.platform.controller;
 
 import com.smartcareer.platform.entity.Notification;
 import com.smartcareer.platform.repository.NotificationRepository;
+import com.smartcareer.platform.repository.UserRepository;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -11,19 +13,27 @@ import java.util.List;
 public class NotificationController {
 
     private final NotificationRepository notificationRepo;
+    private final UserRepository userRepo;
 
-    public NotificationController(NotificationRepository notificationRepo) {
+    public NotificationController(NotificationRepository notificationRepo, UserRepository userRepo) {
         this.notificationRepo = notificationRepo;
+        this.userRepo = userRepo;
     }
 
-    @GetMapping("/{userId}")
-    public List<Notification> getNotifications(@PathVariable Long userId) {
-        return notificationRepo.findByUserIdOrderByCreatedAtDesc(userId);
+    private Long getUserId(Authentication auth) {
+        return userRepo.findByEmail(auth.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"))
+                .getId();
     }
 
-    @PostMapping("/{userId}/read")
-    public void markAsRead(@PathVariable Long userId) {
-        List<Notification> unread = notificationRepo.findByUserIdOrderByCreatedAtDesc(userId);
+    @GetMapping
+    public List<Notification> getNotifications(Authentication auth) {
+        return notificationRepo.findByUserIdOrderByCreatedAtDesc(getUserId(auth));
+    }
+
+    @PostMapping("/read")
+    public void markAsRead(Authentication auth) {
+        List<Notification> unread = notificationRepo.findByUserIdOrderByCreatedAtDesc(getUserId(auth));
         unread.forEach(n -> n.setRead(true));
         notificationRepo.saveAll(unread);
     }

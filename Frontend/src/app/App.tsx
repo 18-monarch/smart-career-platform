@@ -4,9 +4,9 @@ import { Dashboard } from "../app/pages/Dashboard";
 import { ReactNode } from "react";
 
 const PrivateRoute = ({ children }: { children: ReactNode }) => {
-  const userId = localStorage.getItem("userId");
+  const token = localStorage.getItem("token");
 
-  if (!userId) {
+  if (!token) {
     return <Navigate to="/" replace />;
   }
 

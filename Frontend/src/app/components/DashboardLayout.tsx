@@ -51,7 +51,7 @@ export function DashboardLayout() {
   const userName = localStorage.getItem("userName") || "User";
 
   const handleLogout = () => {
-    localStorage.removeItem("userId");
+    localStorage.removeItem("token");
     localStorage.removeItem("userName");
     navigate("/login");
   };
