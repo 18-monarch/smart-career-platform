@@ -5,25 +5,36 @@ const BASE_URL =
 const safeFetch = async (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem("token");
 
-  const headers: any = {
-    "Content-Type": "application/json",
-    ...(options.headers || {}),
+  const headers: Record<string, string> = {
+    ...(options.headers as Record<string, string> || {}),
   };
+
+  // Only add JSON content-type when body is NOT FormData
+  if (!(options.body instanceof FormData)) {
+    headers["Content-Type"] = "application/json";
+  }
 
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const res = await fetch(url, {
-    ...options,
-    headers,
-  });
+  try {
+    const res = await fetch(url, {
+      ...options,
+      headers,
+    });
 
-  if (!res.ok) {
-    throw new Error(await res.text());
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error(`API Error [${res.status}] ${url}:`, errorText);
+      throw new Error(errorText || `Request failed with status ${res.status}`);
+    }
+
+    return res.json();
+  } catch (err: any) {
+    console.error(`Fetch error for ${url}:`, err);
+    throw err;
   }
-
-  return res.json();
 };
 
 export const getNotifications = async () => {
@@ -32,7 +43,6 @@ export const getNotifications = async () => {
 
 // ================= AUTH =================
 
-// 🔐 LOGIN
 export const loginUser = async (email: string, password: string) => {
   return safeFetch(`${BASE_URL}/users/login`, {
     method: "POST",
@@ -40,7 +50,6 @@ export const loginUser = async (email: string, password: string) => {
   });
 };
 
-// 🔐 REGISTER
 export const createUser = async (user: any) => {
   return safeFetch(`${BASE_URL}/users`, {
     method: "POST",
@@ -94,6 +103,15 @@ export const getResources = (category?: string) =>
 export const getCodingActivity = () =>
   safeFetch(`${BASE_URL}/coding`);
 
+export const fetchExternalCodingStats = (
+  leetcodeUsername: string,
+  codeforcesHandle: string
+) =>
+  safeFetch(`${BASE_URL}/coding-tracker`, {
+    method: "POST",
+    body: JSON.stringify({ leetcodeUsername, codeforcesHandle }),
+  });
+
 // ================= CONTEST =================
 
 export const getContestStats = () =>
@@ -130,5 +148,17 @@ export const getInternshipPrep = () =>
 export const getMockInterview = () =>
   safeFetch(`${BASE_URL}/mock-interview`);
 
+// ================= RESUME ANALYZER =================
+
 export const getResumeAnalysis = () =>
-  safeFetch(`${BASE_URL}/resume-analyzer`);
+  safeFetch(`${BASE_URL}/resume-analysis`);
+
+export const uploadResumeForAnalysis = (file: File) => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  return safeFetch(`${BASE_URL}/resume-analysis/upload`, {
+    method: "POST",
+    body: formData,
+  });
+};

@@ -1,6 +1,9 @@
 package com.smartcareer.platform.security;
 
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
 
@@ -42,8 +45,13 @@ public class JwtUtil {
                     .build()
                     .parseClaimsJws(token);
             return true;
+        } catch (ExpiredJwtException e) {
+            System.err.println("Token expired: " + e.getMessage());
+        } catch (MalformedJwtException e) {
+            System.err.println("Invalid token format: " + e.getMessage());
         } catch (Exception e) {
-            return false;
+            System.err.println("Token validation failed: " + e.getMessage());
         }
+        return false;
     }
 }

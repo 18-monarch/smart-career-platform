@@ -1,61 +1,70 @@
 package com.smartcareer.platform.controller;
 
+import com.smartcareer.platform.service.ResumeAnalysisService;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Map;
 
 @RestController
-@RequestMapping("/api/resume-analyzer")
+@RequestMapping("/api/resume-analysis")
+@CrossOrigin(origins = {
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "https://smart-career-platform-seven.vercel.app"
+})
 public class ResumeAnalyzerController {
 
+    private final ResumeAnalysisService resumeAnalysisService;
+
+    public ResumeAnalyzerController(ResumeAnalysisService resumeAnalysisService) {
+        this.resumeAnalysisService = resumeAnalysisService;
+    }
+
     @GetMapping
-    public Map<String, Object> getResumeAnalysis() {
-        Map<String, Object> data = new LinkedHashMap<>();
-        
-        data.put("score", 78);
-        data.put("status", "Good Resume");
-        data.put("message", "Your resume is above average. Follow the suggestions below to improve.");
-
-        List<Map<String, Object>> sections = new ArrayList<>();
-        sections.add(createSection("Contact Information", "complete", 100));
-        sections.add(createSection("Professional Summary", "good", 85));
-        sections.add(createSection("Work Experience", "good", 80));
-        sections.add(createSection("Education", "complete", 100));
-        sections.add(createSection("Skills", "warning", 65));
-        sections.add(createSection("Projects", "good", 75));
-        sections.add(createSection("Achievements", "missing", 0));
-        data.put("sections", sections);
-
-        List<Map<String, String>> suggestions = new ArrayList<>();
-        suggestions.add(createSuggestion("critical", "Add Quantifiable Achievements", "Use numbers and metrics to demonstrate impact (e.g., 'Improved performance by 40%')"));
-        suggestions.add(createSuggestion("important", "Optimize for ATS", "Include more relevant keywords from the job description"));
-        suggestions.add(createSuggestion("suggestion", "Improve Skills Section", "Group skills by category (Technical, Soft Skills, Tools)"));
-        suggestions.add(createSuggestion("suggestion", "Add Action Verbs", "Start bullet points with strong action verbs (Led, Developed, Implemented)"));
-        data.put("suggestions", suggestions);
-
-        Map<String, Object> keywords = new LinkedHashMap<>();
-        keywords.put("coverage", 68);
-        keywords.put("found", 12);
-        keywords.put("missing", 6);
-        keywords.put("suggested", 8);
-        keywords.put("relevance", "High");
-        data.put("keywords", keywords);
-
-        return data;
+    public ResponseEntity<?> getResumeAnalysis() {
+        return ResponseEntity.ok(Map.of(
+                "score", 0,
+                "status", "Upload Resume",
+                "message", "Upload a resume to generate a real analysis.",
+                "sections", new Object[]{},
+                "suggestions", new Object[]{},
+                "keywords", Map.of(
+                        "coverage", 0,
+                        "found", 0,
+                        "missing", 0,
+                        "suggested", 0,
+                        "relevance", "N/A"
+                )
+        ));
     }
 
-    private Map<String, Object> createSection(String name, String status, int score) {
-        Map<String, Object> s = new LinkedHashMap<>();
-        s.put("name", name);
-        s.put("status", status);
-        s.put("score", score);
-        return s;
-    }
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> uploadResumeAndAnalyze(@RequestParam("file") MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "No file uploaded"));
+        }
 
-    private Map<String, String> createSuggestion(String type, String title, String description) {
-        Map<String, String> s = new LinkedHashMap<>();
-        s.put("type", type);
-        s.put("title", title);
-        s.put("description", description);
-        return s;
+        String fileName = file.getOriginalFilename() == null ? "" : file.getOriginalFilename().toLowerCase();
+
+        boolean validExtension =
+                fileName.endsWith(".pdf") ||
+                        fileName.endsWith(".docx");
+
+        if (!validExtension) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Only PDF and DOCX are supported in the real analyzer"
+            ));
+        }
+
+        if (file.getSize() > 5 * 1024 * 1024) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "File size must be 5MB or less"
+            ));
+        }
+
+        return ResponseEntity.ok(resumeAnalysisService.analyzeResume(file));
     }
 }

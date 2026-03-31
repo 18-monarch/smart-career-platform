@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getDashboard } from "../../api/api";
+import { getDashboard, fetchExternalCodingStats } from "../../api/api";
 import { DashboardLayout } from "../components/DashboardLayout";
-
-// Removed redundant local DashboardLayout
 
 import {
   TrendingUp,
@@ -26,6 +24,7 @@ import {
 
 export function Dashboard() {
   const [data, setData] = useState<any>(null);
+  const [liveCodingStats, setLiveCodingStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
@@ -34,8 +33,13 @@ export function Dashboard() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const res = await getDashboard();
-        setData(res);
+        const [dashRes, codingRes] = await Promise.all([
+          getDashboard(),
+          // Passing default demo handles for Dashboard preview
+          fetchExternalCodingStats("neetcode", "tourist").catch(() => null)
+        ]);
+        setData(dashRes);
+        setLiveCodingStats(codingRes);
       } catch (err) {
         console.error(err);
       } finally {
@@ -46,7 +50,31 @@ export function Dashboard() {
     fetchData();
   }, []);
 
-  // ✅ LOADING SKELETON
+  // Process Live Coding Data for Dashboard BarChart
+  const getLiveWeeklyCodingData = () => {
+    if (!liveCodingStats) return data?.codingData || [];
+    
+    const submissions = [
+      ...(liveCodingStats?.leetcode?.recentSubmissions || []),
+      ...(liveCodingStats?.codeforces?.recentActivity || [])
+    ];
+
+    if (submissions.length === 0) return data?.codingData || [];
+
+    const grouped: any = {};
+    submissions.forEach((sub: any) => {
+      const date = new Date(parseInt(sub.timestamp) * 1000);
+      const day = date.toLocaleDateString("en-US", { weekday: "short" });
+      if (!grouped[day]) {
+        grouped[day] = { day, problems: 0 };
+      }
+      grouped[day].problems += 1;
+    });
+    
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    return Object.values(grouped).sort((a: any, b: any) => days.indexOf(a.day) - days.indexOf(b.day));
+  };
+
   if (loading) {
     return (
       <div className="animate-pulse space-y-4">
@@ -65,7 +93,13 @@ export function Dashboard() {
   }
 
   const productivityData = data.productivityData || [];
-  const codingData = data.codingData || [];
+  
+  // Conditionally override dummy dashboard coding data with live data
+  const codingData = getLiveWeeklyCodingData();
+  
+  const totalSolved = liveCodingStats 
+    ? (liveCodingStats.leetcode?.totalSolved || 0) + (liveCodingStats.codeforces?.totalSolved || 0)
+    : data.problemsSolved;
 
   return (
     <>
@@ -89,11 +123,11 @@ export function Dashboard() {
         />
 
         <Card
-          title="Problems Solved"
-          value={data.problemsSolved}
+          title="Total Solved"
+          value={totalSolved}
           icon={<Code />}
           color="orange"
-          trend="+5"
+          trend="+Live"
         />
 
         <Card
@@ -145,15 +179,14 @@ export function Dashboard() {
 
           {/* CODING */}
           <div className="bg-white p-6 rounded-2xl shadow-sm border">
-            <h3 className="mb-4 font-semibold">Coding Activity</h3>
+            <h3 className="mb-4 font-semibold">Coding Activity (Live)</h3>
 
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={codingData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="day" axisLine={false} tickLine={false} />
                 <YAxis axisLine={false} tickLine={false} />
-                <Tooltip />
-
+                <Tooltip cursor={{fill: 'transparent'}} contentStyle={{ borderRadius: '10px' }} />
                 <Bar dataKey="problems" fill="#10b981" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -221,7 +254,6 @@ export function Dashboard() {
   );
 }
 
-
 // ✅ CARD COMPONENT
 function Card({ title, value, icon, color, trend }: any) {
   const colors: any = {
@@ -245,7 +277,6 @@ function Card({ title, value, icon, color, trend }: any) {
     </div>
   );
 }
-
 
 // ✅ METRIC COMPONENT
 function MetricItem({ title, value, color }: any) {
